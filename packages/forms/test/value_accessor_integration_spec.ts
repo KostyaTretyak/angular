@@ -663,7 +663,7 @@ import {dispatchEvent} from '@angular/platform-browser/testing/src/browser_util'
         it('should support removing controls from <type=radio>', () => {
           const fixture = initTest(FormControlRadioButtons);
           const showRadio = new FormControl('yes');
-          const form = new FormGroup<{food?: string, drink?: string}>(
+          const form = new FormGroup<{food?: FormControl<string>, drink?: FormControl<string>}>(
               {'food': new FormControl('fish'), 'drink': new FormControl('sprite')});
           fixture.componentInstance.form = form;
           fixture.componentInstance.showRadio = showRadio;
@@ -1313,7 +1313,7 @@ class NgModelRangeForm {
 })
 export class FormControlRadioButtons {
   // TODO(issue/24571): remove '!'.
-  form!: FormGroup;
+  form!: FormGroup<any>;
   showRadio = new FormControl('yes');
 }
 
@@ -1407,7 +1407,7 @@ export class MyInput implements ControlValueAccessor {
 })
 export class MyInputForm {
   // TODO(issue/24571): remove '!'.
-  form!: FormGroup;
+  form!: FormGroup<{login: FormControl<string>}>;
   @ViewChild(MyInput) myInput: MyInput|null = null;
 }
 

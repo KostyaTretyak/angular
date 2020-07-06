@@ -180,8 +180,12 @@ import {MyInput, MyInputForm} from './value_accessor_integration_spec';
       });
 
       it('should strip named controls that are not found', () => {
+        interface FormModel {
+          signin: FormGroup<{login: FormControl<string>, password: FormControl<string>}>;
+          email?: FormControl<string>;
+        }
         const fixture = initTest(NestedFormGroupComp, LoginIsEmptyValidator);
-        const form = new FormGroup<{signin: {login: string, password: string}, email?: string}>({
+        const form = new FormGroup<FormModel>({
           'signin': new FormGroup({'login': new FormControl(''), 'password': new FormControl('')})
         });
         fixture.componentInstance.form = form;
@@ -1333,7 +1337,7 @@ import {MyInput, MyInputForm} from './value_accessor_integration_spec';
 
         it('should reset properly', () => {
           const fixture = initTest(FormGroupComp);
-          const formGroup = new FormGroup<{login: string}>(
+          const formGroup = new FormGroup<{login: FormControl<string>}>(
               {login: new FormControl('', {validators: Validators.required, updateOn: 'submit'})});
           fixture.componentInstance.form = formGroup;
           fixture.detectChanges();
@@ -1405,7 +1409,7 @@ import {MyInput, MyInputForm} from './value_accessor_integration_spec';
           const fixture = initTest(FormGroupComp);
           const control =
               new FormControl('', {validators: Validators.required, updateOn: 'submit'});
-          const formGroup = new FormGroup<{login: string}>({login: control});
+          const formGroup = new FormGroup<{login: FormControl<string>}>({login: control});
           fixture.componentInstance.form = formGroup;
           fixture.detectChanges();
 
@@ -2463,7 +2467,7 @@ class FormGroupComp {
 })
 class NestedFormGroupComp {
   // TODO(issue/24571): remove '!'.
-  form!: FormGroup;
+  form!: FormGroup<any>;
 }
 
 @Component({

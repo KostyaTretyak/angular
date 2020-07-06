@@ -77,7 +77,13 @@ describe('FormGroup', () => {
   });
 
   describe('getRawValue', () => {
-    let fg: FormGroup;
+    interface FormModel {
+      c1: FormControl<string>;
+      group: FormGroup<{c2: FormControl<string>, c3: FormControl<string>}>;
+      array: FormArray<FormControl<string>>;
+    }
+
+    let fg: FormGroup<FormModel>;
 
     it('should work with nested form groups/arrays', () => {
       fg = new FormGroup({
@@ -98,7 +104,7 @@ describe('FormGroup', () => {
       const formGroup: FormGroup = new FormGroup({
         'c1': new FormControl('v1'),
         'group': new FormGroup({'c2': new FormControl('v2'), 'c3': new FormControl('v3')}),
-        'array': new FormArray<string|{c4: string}>([
+        'array': new FormArray<FormControl<string>|FormGroup<{c4: FormControl<string>}>>([
           new FormControl('v4'), new FormControl('v5'), new FormGroup({'c4': new FormControl('v4')})
         ])
       });
@@ -155,7 +161,8 @@ describe('FormGroup', () => {
 
   describe('adding and removing controls', () => {
     it('should update value and validity when control is added', () => {
-      const g = new FormGroup<{one?: string, two?: string}>({'one': new FormControl('1')});
+      const g = new FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>(
+          {'one': new FormControl('1')});
       expect(g.value).toEqual({'one': '1'});
       expect(g.valid).toBe(true);
 
@@ -166,7 +173,7 @@ describe('FormGroup', () => {
     });
 
     it('should update value and validity when control is removed', () => {
-      const g = new FormGroup<{one?: string, two?: string}>(
+      const g = new FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>(
           {'one': new FormControl('1'), 'two': new FormControl('2', Validators.minLength(10))});
       expect(g.value).toEqual({'one': '1', 'two': '2'});
       expect(g.valid).toBe(false);
@@ -218,7 +225,13 @@ describe('FormGroup', () => {
   });
 
   describe('setValue', () => {
-    let c: FormControl, c2: FormControl, g: FormGroup;
+    interface FormModel {
+      one?: FormControl<string>;
+      two?: FormControl<string>;
+      three?: FormControl<string>;
+    }
+
+    let c: FormControl, c2: FormControl, g: FormGroup<FormModel>;
 
     beforeEach(() => {
       c = new FormControl('');
@@ -286,7 +299,7 @@ describe('FormGroup', () => {
     });
 
     it('should throw if no controls are set yet', () => {
-      const empty = new FormGroup({});
+      const empty = new FormGroup<{one?: FormControl<string>}>({});
       expect(() => empty.setValue({
         'one': 'one'
       })).toThrowError(new RegExp(`no form controls registered with this group`));
@@ -339,7 +352,13 @@ describe('FormGroup', () => {
   });
 
   describe('patchValue', () => {
-    let c: FormControl, c2: FormControl, g: FormGroup;
+    interface FormModel {
+      one?: FormControl<string|null>;
+      two?: FormControl<string>;
+      three?: FormControl<string>;
+    }
+
+    let c: FormControl, c2: FormControl, g: FormGroup<FormModel>;
 
     beforeEach(() => {
       c = new FormControl('');
@@ -459,7 +478,13 @@ describe('FormGroup', () => {
   });
 
   describe('reset()', () => {
-    let c: FormControl, c2: FormControl, g: FormGroup;
+    interface FormModel {
+      one?: FormControl<string|null>;
+      two?: FormControl<string|null>;
+      three?: FormControl<string>;
+    }
+
+    let c: FormControl, c2: FormControl, g: FormGroup<FormModel>;
 
     beforeEach(() => {
       c = new FormControl('initial value');
@@ -1040,7 +1065,11 @@ describe('FormGroup', () => {
     });
 
     it('should ignore disabled controls when serializing value', () => {
-      const g = new FormGroup<{nested?: {one: string}, two?: string}>(
+      interface FormModel {
+        nested?: FormGroup<{one: FormControl<string>}>;
+        two?: FormControl<string>;
+      }
+      const g = new FormGroup<FormModel>(
           {nested: new FormGroup({one: new FormControl('one')}), two: new FormControl('two')});
       expect(g.value).toEqual({'nested': {'one': 'one'}, 'two': 'two'});
 
@@ -1052,7 +1081,10 @@ describe('FormGroup', () => {
     });
 
     it('should update its value when disabled with disabled children', () => {
-      const g = new FormGroup<{nested?: {one: string, two?: string}}>(
+      interface FormModel {
+        nested?: FormGroup<{one: FormControl<string>; two?: FormControl<string>;}>;
+      }
+      const g = new FormGroup<FormModel>(
           {nested: new FormGroup({one: new FormControl('one'), two: new FormControl('two')})});
 
       g.get('nested.two')!.disable();
@@ -1066,7 +1098,10 @@ describe('FormGroup', () => {
     });
 
     it('should update its value when enabled with disabled children', () => {
-      const g = new FormGroup<{nested?: {one: string, two?: string}}>(
+      interface FormModel {
+        nested?: FormGroup<{one: FormControl<string>; two?: FormControl<string>;}>;
+      }
+      const g = new FormGroup<FormModel>(
           {nested: new FormGroup({one: new FormControl('one'), two: new FormControl('two')})});
 
       g.get('nested.two')!.disable();
@@ -1158,7 +1193,7 @@ describe('FormGroup', () => {
       });
 
       it('should re-populate group errors when enabled from a child', () => {
-        const g = new FormGroup<{one: string, two?: string}>(
+        const g = new FormGroup<{one: FormControl<string>, two?: FormControl<string>}>(
             {'one': new FormControl()}, () => ({'expected': true}));
         g.disable();
         expect(g.errors).toEqual(null);
@@ -1181,7 +1216,7 @@ describe('FormGroup', () => {
          }));
 
       it('should re-populate async group errors when enabled from a child', fakeAsync(() => {
-           const g = new FormGroup<{one: string, two?: string}>(
+           const g = new FormGroup<{one: FormControl<string>, two?: FormControl<string>}>(
                {'one': new FormControl()}, null!, asyncValidator('expected'));
            tick();
            expect(g.errors).toEqual({'async': true});
@@ -1283,7 +1318,7 @@ describe('FormGroup', () => {
 
   describe('setControl()', () => {
     let c: FormControl;
-    let g: FormGroup;
+    let g: FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>;
 
     beforeEach(() => {
       c = new FormControl('one');
