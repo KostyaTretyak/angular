@@ -155,6 +155,16 @@ export declare class EmailValidator implements Validator {
     validate(control: AbstractControl): ValidationErrors | null;
 }
 
+export declare type ExtractGroupStateValue<T extends FormGroupModel<T>> = {
+    [P in keyof T]: FormControlState<ExtractModelValue<T[P]>>;
+};
+
+export declare type ExtractGroupValue<T extends FormGroupModel<T>> = {
+    [P in keyof T]: ExtractModelValue<T[P]>;
+};
+
+export declare type ExtractModelValue<Control extends AbstractControl> = Control extends FormControl<infer Value> ? Value | null : Control extends FormGroup<infer GroupModel> ? ExtractGroupValue<GroupModel> : Control extends FormArray<infer NestedControl> ? ExtractModelValue<NestedControl>[] : never;
+
 export declare interface Form {
     addControl(dir: NgControl): void;
     addFormGroup(dir: AbstractFormGroupDirective): void;
@@ -165,28 +175,28 @@ export declare interface Form {
     updateModel(dir: NgControl, value: any): void;
 }
 
-export declare class FormArray<Item = any> extends AbstractControl<Item[]> {
-    controls: AbstractControl<Item>[];
+export declare class FormArray<T extends AbstractControl = AbstractControl> extends AbstractControl<ExtractModelValue<T>[]> {
+    controls: T[];
     get length(): number;
-    readonly value: Item[];
-    readonly valueChanges: Observable<Item[]>;
-    constructor(controls: AbstractControl<Item>[], validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null);
-    at(index: number): AbstractControl<Item>;
+    readonly value: ExtractModelValue<T>[];
+    readonly valueChanges: Observable<ExtractModelValue<T>[]>;
+    constructor(controls: T[], validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null);
+    at(index: number): T;
     clear(): void;
-    getRawValue(): Item[];
-    insert(index: number, control: AbstractControl<Item>): void;
-    patchValue(value: Item[], options?: {
+    getRawValue(): ExtractModelValue<T>[];
+    insert(index: number, control: T): void;
+    patchValue(value: (ExtractModelValue<T> | undefined)[], options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
-    push(control: AbstractControl<Item>): void;
+    push(control: T): void;
     removeAt(index: number): void;
-    reset(value?: FormControlState<Item>[], options?: {
+    reset(value?: FormControlState<ExtractModelValue<T>>[], options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
-    setControl(index: number, control: AbstractControl<Item>): void;
-    setValue(value: Item[], options?: {
+    setControl(index: number, control: T): void;
+    setValue(value: ExtractModelValue<T>[], options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
@@ -205,9 +215,9 @@ export declare class FormArrayName extends ControlContainer implements OnInit, O
 }
 
 export declare class FormBuilder {
-    array<Item = any>(controlsConfig: FormControlConfig<Item>[], validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null): FormArray;
+    array<Item extends AbstractControl = AbstractControl>(controlsConfig: FormControlConfig<Item>[], validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null): FormArray;
     control<T = any>(formState: FormControlState<T>, validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null): FormControl;
-    group<T extends object = any>(controlsConfig: {
+    group<T extends FormGroupModel<T> = FormGroupModel<any>>(controlsConfig: {
         [key in keyof T]: FormControlConfig<T[key]>;
     }, options?: AbstractControlOptions | {
         [key: string]: any;
@@ -236,7 +246,7 @@ export declare class FormControl<T = any> extends AbstractControl<T> {
     }): void;
 }
 
-export declare type FormControlConfig<T> = AbstractControl<T> | FormControlState<T> | [FormControlState<T>, (ValidatorFn | ValidatorFn[] | AbstractControlOptions)?, (AsyncValidatorFn | AsyncValidatorFn[])?];
+export declare type FormControlConfig<T extends AbstractControl> = T | FormControlState<ExtractModelValue<T>> | [FormControlState<ExtractModelValue<T>>, (ValidatorFn | ValidatorFn[] | AbstractControlOptions)?, (AsyncValidatorFn | AsyncValidatorFn[])?];
 
 export declare class FormControlDirective extends NgControl implements OnChanges {
     get asyncValidator(): AsyncValidatorFn | null;
@@ -274,30 +284,30 @@ export declare type FormControlState<T> = null | T | {
     disabled: boolean;
 };
 
-export declare class FormGroup<T extends object = any> extends AbstractControl<T> {
+export declare class FormGroup<T extends FormGroupModel<T> = FormGroupModel<any>> extends AbstractControl<ExtractGroupValue<T>> {
     controls: {
-        [key in keyof T]: AbstractControl<T[key]>;
+        [key in keyof T]: T[key];
     };
-    readonly value: T;
-    readonly valueChanges: Observable<T>;
+    readonly value: ExtractGroupValue<T>;
+    readonly valueChanges: Observable<ExtractGroupValue<T>>;
     constructor(controls: {
-        [key in keyof T]: AbstractControl<T[key]>;
+        [key in keyof T]: T[key];
     }, validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null);
-    addControl<K extends keyof T>(name: K, control: AbstractControl<T[K]>): void;
+    addControl<K extends keyof T>(name: K, control: T[K]): void;
     contains(controlName: keyof T): boolean;
-    getRawValue(): T;
-    patchValue<K extends keyof T>(value: Partial<T>, options?: {
+    getRawValue(): ExtractGroupValue<T>;
+    patchValue<K extends keyof T>(value: Partial<ExtractGroupValue<T> | ExtractGroupStateValue<T>>, options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
-    registerControl<K extends keyof T>(name: K, control: AbstractControl<T[K]>): AbstractControl;
+    registerControl<K extends keyof T>(name: K, control: T[K]): T[K];
     removeControl(name: keyof T): void;
-    reset(value?: T, options?: {
+    reset(value?: ExtractGroupValue<T> | ExtractGroupStateValue<T>, options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
-    setControl<K extends keyof T>(name: K, control: AbstractControl<T[K]>): void;
-    setValue<K extends keyof T>(value: T, options?: {
+    setControl<K extends keyof T>(name: K, control: T[K]): void;
+    setValue<K extends keyof T>(value: ExtractGroupValue<T> | ExtractGroupStateValue<T>, options?: {
         onlySelf?: boolean;
         emitEvent?: boolean;
     }): void;
@@ -327,6 +337,10 @@ export declare class FormGroupDirective extends ControlContainer implements Form
     resetForm(value?: any): void;
     updateModel(dir: FormControlName, value: any): void;
 }
+
+export declare type FormGroupModel<T extends object> = {
+    [P in keyof T]: AbstractControl;
+};
 
 export declare class FormGroupName extends AbstractFormGroupDirective implements OnInit, OnDestroy {
     name: string | number | null;

@@ -9,7 +9,7 @@
 import {Injectable} from '@angular/core';
 
 import {AsyncValidatorFn, ValidatorFn} from './directives/validators';
-import {AbstractControl, AbstractControlOptions, FormArray, FormControl, FormControlState, FormGroup, FormHooks} from './model';
+import {AbstractControl, AbstractControlOptions, ExtractModelValue, FormArray, FormControl, FormControlState, FormGroup, FormGroupModel, FormHooks} from './model';
 
 function isAbstractControlOptions(options: AbstractControlOptions|
                                   {[key: string]: any}): options is AbstractControlOptions {
@@ -21,11 +21,11 @@ function isAbstractControlOptions(options: AbstractControlOptions|
 /**
  * @publicApi
  */
-export type FormControlConfig<T> =
-  | AbstractControl<T>
-  | FormControlState<T>
+export type FormControlConfig<T extends AbstractControl> =
+  | T
+  | FormControlState<ExtractModelValue<T>>
   | [
-      FormControlState<T>,
+      FormControlState<ExtractModelValue<T>>,
       (ValidatorFn | ValidatorFn[] | AbstractControlOptions)?,
       (AsyncValidatorFn | AsyncValidatorFn[])?
     ];
@@ -65,7 +65,7 @@ export class FormBuilder {
    * * `asyncValidator`: A single async validator or array of async validator functions
    *
    */
-  group<T extends object = any>(
+  group<T extends FormGroupModel<T> = FormGroupModel<any>>(
       controlsConfig: {[key in keyof T]: FormControlConfig<T[key]>},
       options: AbstractControlOptions|{[key: string]: any}|null = null): FormGroup {
     const controls = this._reduceControls(controlsConfig);
@@ -134,11 +134,11 @@ export class FormBuilder {
    * @param asyncValidator A single async validator or array of async validator
    * functions.
    */
-  array<Item = any>(
+  array<Item extends AbstractControl = AbstractControl>(
       controlsConfig: FormControlConfig<Item>[],
       validatorOrOpts?: ValidatorFn|ValidatorFn[]|AbstractControlOptions|null,
       asyncValidator?: AsyncValidatorFn|AsyncValidatorFn[]|null): FormArray {
-    const controls = controlsConfig.map(c => this._createControl(c));
+    const controls = controlsConfig.map(c => this._createControl(c)) as Item[];
     return new FormArray<Item>(controls, validatorOrOpts, asyncValidator);
   }
 

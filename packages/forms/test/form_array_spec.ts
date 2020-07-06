@@ -99,10 +99,12 @@ describe('FormArray', () => {
   });
 
   describe('getRawValue()', () => {
-    let a: FormArray;
+    type FormModel = FormGroup<{c2: FormControl<string>, c3: FormControl<string>}>|
+        FormArray<FormControl<string>>;
+    let a: FormArray<FormModel>;
 
     it('should work with nested form groups/arrays', () => {
-      a = new FormArray<{c2: string, c3: string}|string[]>([
+      a = new FormArray<FormModel>([
         new FormGroup({'c2': new FormControl('v2'), 'c3': new FormControl('v3')}),
         new FormArray([new FormControl('v4'), new FormControl('v5')])
       ]);
@@ -115,7 +117,10 @@ describe('FormArray', () => {
 
   describe('markAllAsTouched', () => {
     it('should mark all descendants as touched', () => {
-      const formArray: FormArray = new FormArray<string|{c1: string}|{c2: string}[]>([
+      type FormModel = FormControl<string>|FormGroup<{c1: FormControl<string>}>|
+          FormArray<FormGroup<{c2: FormControl<string>}>>;
+
+      const formArray: FormArray = new FormArray<FormModel>([
         new FormControl('v1'), new FormControl('v2'), new FormGroup({'c1': new FormControl('v1')}),
         new FormArray([new FormGroup({'c2': new FormControl('v2')})])
       ]);
@@ -165,7 +170,7 @@ describe('FormArray', () => {
   });
 
   describe('setValue', () => {
-    let c: FormControl, c2: FormControl, a: FormArray;
+    let c: FormControl, c2: FormControl, a: FormArray<FormControl<string>>;
 
     beforeEach(() => {
       c = new FormControl('');
@@ -214,7 +219,7 @@ describe('FormArray', () => {
     });
 
     it('should throw if fields are missing from supplied value (subset)', () => {
-      expect(() => a.setValue([, 'two']))
+      expect(() => a.setValue([, 'two'] as string[]))
           .toThrowError(new RegExp(`Must supply a value for form control at index: 0`));
     });
 
@@ -231,7 +236,7 @@ describe('FormArray', () => {
     });
 
     it('should throw if no controls are set yet', () => {
-      const empty = new FormArray([]);
+      const empty = new FormArray<FormControl<string>>([]);
       expect(() => empty.setValue(['one']))
           .toThrowError(new RegExp(`no form controls registered with this array`));
     });
@@ -286,12 +291,12 @@ describe('FormArray', () => {
   });
 
   describe('patchValue', () => {
-    let c: FormControl, c2: FormControl, a: FormArray;
+    let c: FormControl, c2: FormControl, a: FormArray<FormControl<string>>;
 
     beforeEach(() => {
       c = new FormControl('');
       c2 = new FormControl('');
-      a = new FormArray<string>([c, c2]);
+      a = new FormArray([c, c2]);
     });
 
     it('should set its own value', () => {
@@ -340,8 +345,8 @@ describe('FormArray', () => {
     });
 
     it('should not ignore fields that are null', () => {
-      a.patchValue([null]);
-      expect(a.value).toEqual([null, '']);
+      a.patchValue([null] as any[]);
+      expect(a.value).toEqual([null, ''] as any[]);
     });
 
     it('should ignore any value provided for a missing control (superset)', () => {
@@ -409,7 +414,7 @@ describe('FormArray', () => {
   });
 
   describe('reset()', () => {
-    let c: FormControl, c2: FormControl, a: FormArray;
+    let c: FormControl, c2: FormControl, a: FormArray<FormControl<string>>;
 
     beforeEach(() => {
       c = new FormControl('initial value');
@@ -769,7 +774,7 @@ describe('FormArray', () => {
   });
 
   describe('valueChanges', () => {
-    let a: FormArray;
+    let a: FormArray<FormControl<string>>;
     let c1: any /** TODO #9100 */, c2: any /** TODO #9100 */;
 
     beforeEach(() => {
@@ -1046,7 +1051,12 @@ describe('FormArray', () => {
     });
 
     it('should ignore disabled controls when serializing value', () => {
-      const g = new FormGroup<{nested?: string[], two: string}>(
+      interface FormModel {
+        nested?: FormArray<FormControl<string>>;
+        two: FormControl<string>;
+      }
+
+      const g = new FormGroup<FormModel>(
           {nested: new FormArray([new FormControl('one')]), two: new FormControl('two')});
       expect(g.value).toEqual({'nested': ['one'], 'two': 'two'});
 
@@ -1084,7 +1094,7 @@ describe('FormArray', () => {
     });
 
     it('should keep empty, disabled arrays disabled when updating validity', () => {
-      const arr = new FormArray([]);
+      const arr = new FormArray<FormControl<string>>([]);
       expect(arr.status).toEqual('VALID');
 
       arr.disable();
@@ -1228,7 +1238,7 @@ describe('FormArray', () => {
 
     describe('setControl()', () => {
       let c: FormControl;
-      let a: FormArray;
+      let a: FormArray<FormControl<string>>;
 
       beforeEach(() => {
         c = new FormControl('one');

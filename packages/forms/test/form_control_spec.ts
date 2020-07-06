@@ -457,7 +457,7 @@ describe('FormControl', () => {
   });
 
   describe('setValue', () => {
-    let g: FormGroup, c: FormControl;
+    let g: FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>, c: FormControl;
     beforeEach(() => {
       c = new FormControl('oldValue');
       g = new FormGroup({'one': c});
@@ -524,7 +524,7 @@ describe('FormControl', () => {
   });
 
   describe('patchValue', () => {
-    let g: FormGroup, c: FormControl;
+    let g: FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>, c: FormControl;
     beforeEach(() => {
       c = new FormControl('oldValue');
       g = new FormGroup({'one': c});
@@ -975,7 +975,8 @@ describe('FormControl', () => {
     it('should update the parent group value when child control status changes', () => {
       const c = new FormControl('one');
       const c2 = new FormControl('two');
-      const g = new FormGroup<{one?: string, two?: string}>({'one': c, 'two': c2});
+      const g = new FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>(
+          {'one': c, 'two': c2});
       expect(g.value).toEqual({'one': 'one', 'two': 'two'});
 
       c.disable();
@@ -1067,7 +1068,8 @@ describe('FormControl', () => {
     it('should ignore disabled controls when serializing value in a group', () => {
       const c = new FormControl('one');
       const c2 = new FormControl('two');
-      const g = new FormGroup<{one?: string, two?: string}>({one: c, two: c2});
+      const g =
+          new FormGroup<{one?: FormControl<string>, two?: FormControl<string>}>({one: c, two: c2});
       expect(g.value).toEqual({one: 'one', two: 'two'});
 
       c.disable();
